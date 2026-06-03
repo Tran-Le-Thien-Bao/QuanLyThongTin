@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+{% block title %}Báo Cáo Tổng Hợp{% endblock %}
+{% block breadcrumb %}Báo Cáo Tổng Hợp{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h5 class="page-title mb-0">
+    <i class="bi bi-bar-chart-fill me-2"></i>Báo Cáo Tổng Hợp
+  </h5>
+  <form method="GET" class="d-flex gap-2 align-items-center">
+    <label class="text-muted small mb-0">Tháng:</label>
+    <input type="month" name="thang" class="form-control form-control-sm" value="{{ thang }}"
+           style="width:150px">
+    <button type="submit" class="btn btn-sm btn-accent">
+      <i class="bi bi-funnel me-1"></i>Xem
+    </button>
+  </form>
+</div>
+
+<!-- DOANH THU STATS -->
+<div class="row g-3 mb-4">
+  <div class="col-md-4">
+    <div class="stat-card">
+      <div class="stat-icon green"><i class="bi bi-currency-exchange"></i></div>
+      <div>
+        <div class="stat-label">Doanh Thu Tháng {{ thang_num }}/{{ nam }}</div>
+        <div class="stat-value" style="font-size:1.35rem">
+          {{ '{:,.0f}'.format(doanh_thu.Tong) }}
+          <small class="fs-6 text-muted ms-1">VNĐ</small>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="stat-card">
+      <div class="stat-icon blue"><i class="bi bi-receipt-cutoff"></i></div>
+      <div>
+        <div class="stat-label">Hóa Đơn Đã Thu</div>
+        <div class="stat-value">{{ doanh_thu.SoHoaDon }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="stat-card">
+      <div class="stat-icon {{ 'red' if thuoc_ton_it | length > 0 else 'green' }}">
+        <i class="bi bi-box-seam"></i>
+      </div>
+      <div>
+        <div class="stat-label">Thuốc Sắp Hết Kho</div>
+        <div class="stat-value {{ 'text-danger' if thuoc_ton_it | length > 0 else '' }}">
+          {{ thuoc_ton_it | length }}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <!-- TOP BÁC SĨ -->
+  <div class="col-lg-6">
+    <div class="card h-100">
+      <div class="card-header bg-white">
+        <i class="bi bi-trophy me-2 text-warning"></i>
+        <strong>Top Bác Sĩ Khám Nhiều Nhất</strong>
+        <span class="text-muted small ms-1">Tháng {{ thang_num }}/{{ nam }}</span>
+      </div>
+      <div class="card-body p-0">
+        {% if top_bac_si %}
+        <table class="table table-hover mb-0">
+          <thead>
+            <tr>
+              <th style="width:40px">#</th>
+              <th>Bác Sĩ</th>
+              <th>Chuyên Khoa</th>
+              <th class="text-end">Lượt Khám</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for bs in top_bac_si %}
+            <tr>
+              <td>
+                {% if loop.index == 1 %}<i class="bi bi-trophy-fill text-warning fs-5"></i>
+                {% elif loop.index == 2 %}<i class="bi bi-trophy-fill text-secondary fs-5"></i>
+                {% elif loop.index == 3 %}<i class="bi bi-trophy-fill fs-5" style="color:#cd7f32"></i>
+                {% else %}<span class="text-muted">{{ loop.index }}</span>{% endif %}
+              </td>
+              <td class="fw-semibold">{{ bs.HoTen }}</td>
+              <td>
+                <span class="badge bg-light text-dark border" style="font-size:11px">
+                  {{ bs.ChuyenKhoa or 'Đa khoa' }}
+                </span>
+              </td>
+              <td class="text-end fw-bold" style="color:var(--primary)">{{ bs.SoLuot }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <div class="text-center py-4 text-muted">Chưa có dữ liệu</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- TOP THUỐC -->
+  <div class="col-lg-6">
+    <div class="card h-100">
+      <div class="card-header bg-white">
+        <i class="bi bi-capsule me-2" style="color:var(--accent)"></i>
+        <strong>Top Thuốc Dùng Nhiều Nhất</strong>
+        <span class="text-muted small ms-1">Tháng {{ thang_num }}/{{ nam }}</span>
+      </div>
+      <div class="card-body p-0">
+        {% if top_thuoc %}
+        <table class="table table-hover mb-0">
+          <thead>
+            <tr><th>#</th><th>Tên Thuốc</th><th>Đơn Vị</th><th class="text-end">Tổng Dùng</th></tr>
+          </thead>
+          <tbody>
+            {% for t in top_thuoc %}
+            <tr>
+              <td class="text-muted">{{ loop.index }}</td>
+              <td class="fw-semibold">{{ t.TenThuoc }}</td>
+              <td>{{ t.DonVi }}</td>
+              <td class="text-end fw-bold">{{ t.TongDung }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <div class="text-center py-4 text-muted">Chưa có dữ liệu</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- TRẠNG THÁI LỊCH HẸN -->
+  <div class="col-lg-6">
+    <div class="card">
+      <div class="card-header bg-white">
+        <i class="bi bi-pie-chart me-2" style="color:var(--accent)"></i>
+        <strong>Lịch Hẹn Theo Trạng Thái</strong>
+        <span class="text-muted small ms-1">Tháng {{ thang_num }}/{{ nam }}</span>
+      </div>
+      <div class="card-body">
+        {% if trang_thai_stat %}
+        {% set total = trang_thai_stat | sum(attribute='SoLuong') %}
+        {% for stat in trang_thai_stat %}
+        <div class="mb-3">
+          <div class="d-flex justify-content-between mb-1">
+            <span>
+              {% if stat.TrangThai == 'Chờ khám' %}
+                <span class="status-pill badge-cho-kham">{{ stat.TrangThai }}</span>
+              {% elif stat.TrangThai == 'Đang khám' %}
+                <span class="status-pill badge-dang-kham">{{ stat.TrangThai }}</span>
+              {% elif stat.TrangThai == 'Hoàn thành' %}
+                <span class="status-pill badge-hoan-thanh">{{ stat.TrangThai }}</span>
+              {% else %}
+                <span class="status-pill badge-da-huy">{{ stat.TrangThai }}</span>
+              {% endif %}
+            </span>
+            <strong>{{ stat.SoLuong }}</strong>
+          </div>
+          <div class="progress" style="height:8px;border-radius:4px">
+            <div class="progress-bar
+              {% if stat.TrangThai == 'Hoàn thành' %}bg-success
+              {% elif stat.TrangThai == 'Đang khám' %}bg-info
+              {% elif stat.TrangThai == 'Chờ khám' %}bg-warning
+              {% else %}bg-secondary{% endif %}"
+              style="width: {{ (stat.SoLuong / total * 100) | round | int }}%;border-radius:4px">
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="text-center py-4 text-muted">Chưa có dữ liệu</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- THUỐC SẮP HẾT -->
+  <div class="col-lg-6">
+    <div class="card">
+      <div class="card-header bg-white" style="color:var(--danger)">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        <strong>Thuốc Tồn Kho Dưới 20 Đơn Vị</strong>
+      </div>
+      <div class="card-body p-0">
+        {% if thuoc_ton_it %}
+        <div class="table-responsive" style="max-height:280px;overflow-y:auto">
+          <table class="table table-sm table-hover mb-0">
+            <thead>
+              <tr><th>Tên Thuốc</th><th class="text-end">Tồn Kho</th><th>Hạn Dùng</th></tr>
+            </thead>
+            <tbody>
+              {% for t in thuoc_ton_it %}
+              <tr>
+                <td class="fw-semibold">{{ t.TenThuoc }}</td>
+                <td class="text-end">
+                  <span class="badge {{ 'bg-danger' if t.SoLuongTon < 5 else 'bg-warning text-dark' }}">
+                    {{ t.SoLuongTon }}
+                  </span>
+                </td>
+                <td class="text-muted small">
+                  {% if t.HanSuDung %}
+                    {{ t.HanSuDung.strftime('%d/%m/%Y') if t.HanSuDung.strftime is defined else t.HanSuDung }}
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="text-center py-4" style="color:var(--success)">
+          <i class="bi bi-check-circle-fill d-block mb-2" style="font-size:2rem"></i>
+          <div class="fw-semibold">Tồn kho ổn định</div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

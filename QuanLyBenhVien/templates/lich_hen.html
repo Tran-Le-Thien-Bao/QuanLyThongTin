@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+{% block title %}Lịch Hẹn{% endblock %}
+{% block breadcrumb %}Lịch Hẹn Khám{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h5 class="page-title mb-0">
+    <i class="bi bi-calendar-check-fill me-2"></i>Lịch Hẹn Khám
+  </h5>
+  <a href="{{ url_for('tiep_nhan') }}" class="btn btn-hospital">
+    <i class="bi bi-person-plus me-2"></i>Tiếp Nhận Mới
+  </a>
+</div>
+
+<!-- BỘ LỌC NGÀY -->
+<div class="card-hospital mb-4">
+  <form method="GET" class="d-flex flex-wrap gap-2 align-items-end">
+    <div>
+      <label class="form-label">Xem lịch ngày</label>
+      <input type="date" name="ngay" class="form-control" value="{{ ngay }}"
+             style="width:180px">
+    </div>
+    <button type="submit" class="btn btn-accent">
+      <i class="bi bi-funnel me-1"></i>Lọc
+    </button>
+    <a href="{{ url_for('lich_hen') }}" class="btn btn-outline-secondary">Hôm nay</a>
+  </form>
+</div>
+
+<!-- THỐNG KÊ NHANH -->
+{% if lich_list %}
+{% set cho_kham   = lich_list | selectattr('TrangThai', 'equalto', 'Chờ khám')   | list | length %}
+{% set dang_kham  = lich_list | selectattr('TrangThai', 'equalto', 'Đang khám')  | list | length %}
+{% set hoan_thanh = lich_list | selectattr('TrangThai', 'equalto', 'Hoàn thành') | list | length %}
+<div class="row g-3 mb-4">
+  <div class="col-sm-4">
+    <div class="stat-card">
+      <div class="stat-icon orange"><i class="bi bi-hourglass-split"></i></div>
+      <div>
+        <div class="stat-label">Chờ Khám</div>
+        <div class="stat-value">{{ cho_kham }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-4">
+    <div class="stat-card">
+      <div class="stat-icon teal"><i class="bi bi-activity"></i></div>
+      <div>
+        <div class="stat-label">Đang Khám</div>
+        <div class="stat-value">{{ dang_kham }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-4">
+    <div class="stat-card">
+      <div class="stat-icon green"><i class="bi bi-check-circle-fill"></i></div>
+      <div>
+        <div class="stat-label">Hoàn Thành</div>
+        <div class="stat-value">{{ hoan_thanh }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<!-- BẢNG LỊCH HẸN -->
+<div class="card">
+  <div class="card-header bg-white d-flex justify-content-between align-items-center">
+    <span>
+      <i class="bi bi-list-ul me-2" style="color:var(--accent)"></i>
+      <strong>Danh sách lịch hẹn — {{ ngay }}</strong>
+      <span class="badge ms-2" style="background:var(--primary)">{{ lich_list | length }}</span>
+    </span>
+  </div>
+  <div class="card-body p-0">
+    {% if lich_list %}
+    <div class="table-responsive">
+      <table class="table table-hover mb-0 align-middle">
+        <thead>
+          <tr>
+            <th style="width:80px">Giờ</th>
+            <th>Bệnh Nhân</th>
+            <th>Bác Sĩ</th>
+            <th>Chuyên Khoa</th>
+            <th>Lý Do</th>
+            <th>Trạng Thái</th>
+            <th class="text-center" style="width:130px">Hành Động</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for lh in lich_list %}
+          <tr>
+            <td>
+              <span class="fw-bold" style="color:var(--primary);font-size:15px">
+                {% if lh.NgayGio %}
+                  {{ lh.NgayGio.strftime('%H:%M') if lh.NgayGio.strftime is defined else lh.NgayGio }}
+                {% else %}—{% endif %}
+              </span>
+            </td>
+            <td>
+              <div class="d-flex align-items-center gap-2">
+                <div class="user-avatar sm" style="flex-shrink:0;font-size:12px">
+                  {{ lh.TenBN[:1] if lh.TenBN else '?' }}
+                </div>
+                <div>
+                  <div class="fw-semibold">{{ lh.TenBN }}</div>
+                  <small class="text-muted">{{ lh.MaBN }}</small>
+                </div>
+              </div>
+            </td>
+            <td class="fw-semibold" style="font-size:13px">{{ lh.TenBS }}</td>
+            <td>
+              <span class="badge bg-light text-dark border" style="font-size:11px">
+                {{ lh.ChuyenKhoa or 'Đa khoa' }}
+              </span>
+            </td>
+            <td class="text-muted" style="max-width:200px">
+              <span class="d-inline-block text-truncate" style="max-width:180px"
+                    title="{{ lh.LyDoKham or '' }}">
+                {{ lh.LyDoKham or '—' }}
+              </span>
+            </td>
+            <td>
+              {% set tt = lh.TrangThai %}
+              {% if tt == 'Chờ khám' %}
+                <span class="status-pill badge-cho-kham">
+                  <i class="bi bi-hourglass-split me-1"></i>{{ tt }}
+                </span>
+              {% elif tt == 'Đang khám' %}
+                <span class="status-pill badge-dang-kham">
+                  <i class="bi bi-activity me-1"></i>{{ tt }}
+                </span>
+              {% elif tt == 'Hoàn thành' %}
+                <span class="status-pill badge-hoan-thanh">
+                  <i class="bi bi-check-circle me-1"></i>{{ tt }}
+                </span>
+              {% else %}
+                <span class="status-pill badge-da-huy">{{ tt }}</span>
+              {% endif %}
+            </td>
+            <td class="text-center">
+              {% if lh.TrangThai == 'Chờ khám' %}
+                <a href="{{ url_for('kham_benh', ma_lich=lh.MaLich) }}"
+                   class="btn btn-sm btn-primary">
+                  <i class="bi bi-clipboard-pulse me-1"></i>Bắt đầu khám
+                </a>
+              {% elif lh.TrangThai == 'Đang khám' and lh.MaHoSo %}
+                <a href="{{ url_for('ke_don', ma_ho_so=lh.MaHoSo) }}"
+                   class="btn btn-sm btn-accent">
+                  <i class="bi bi-capsule me-1"></i>Kê đơn
+                </a>
+              {% elif lh.TrangThai == 'Hoàn thành' and lh.MaHoSo %}
+                <a href="{{ url_for('hoa_don', ma_ho_so=lh.MaHoSo) }}"
+                   class="btn btn-sm btn-outline-success">
+                  <i class="bi bi-receipt me-1"></i>Hóa đơn
+                </a>
+              {% else %}
+                <span class="text-muted">—</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="text-center py-5 text-muted">
+      <i class="bi bi-calendar-x d-block mb-3" style="font-size:3rem;color:#dee2e6"></i>
+      <div class="fw-semibold mb-1">Không có lịch hẹn ngày {{ ngay }}</div>
+      <div class="small mb-4">Hãy tiếp nhận bệnh nhân mới để tạo lịch hẹn</div>
+      <a href="{{ url_for('tiep_nhan') }}" class="btn btn-hospital">
+        <i class="bi bi-person-plus me-2"></i>Tiếp Nhận Bệnh Nhân
+      </a>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

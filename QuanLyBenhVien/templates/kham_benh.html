@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+{% block title %}Khám Bệnh — {{ lich.MaLich }}{% endblock %}
+{% block breadcrumb %}
+  <a href="{{ url_for('lich_hen') }}">Lịch Hẹn</a>
+  <i class="bi bi-chevron-right mx-1" style="font-size:11px"></i>Khám Bệnh
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h5 class="page-title mb-0">
+    <i class="bi bi-clipboard-pulse me-2"></i>Khám Bệnh — {{ lich.MaLich }}
+  </h5>
+  <a href="{{ url_for('lich_hen') }}" class="btn btn-outline-secondary no-print">
+    <i class="bi bi-arrow-left me-1"></i>Quay lại
+  </a>
+</div>
+
+<div class="row g-4">
+  <!-- CỘT TRÁI: Patient card (sticky) -->
+  <div class="col-lg-4">
+    <div class="card-hospital" style="position:sticky;top:24px">
+      <!-- Avatar + tên -->
+      <div class="text-center mb-3">
+        <div class="patient-avatar-circle">
+          {{ lich.TenBN[:2] if lich.TenBN else '??' }}
+        </div>
+        <h5 class="fw-bold mb-0" style="color:var(--primary)">{{ lich.TenBN }}</h5>
+        <div class="text-muted small">
+          {% if lich.NgaySinh %}
+            {% set ngay_sinh = lich.NgaySinh.strftime('%Y') if lich.NgaySinh.strftime is defined else (lich.NgaySinh | string)[:4] %}
+            {{ 2026 - (ngay_sinh | int) }} tuổi
+          {% endif %}
+          {% if lich.NhomMau %}
+            &nbsp;·&nbsp;<span class="badge bg-danger">{{ lich.NhomMau }}</span>
+          {% endif %}
+        </div>
+      </div>
+
+      <hr class="my-3" style="border-color:var(--border)">
+
+      <!-- Thông tin chi tiết -->
+      <table class="table table-sm table-borderless mb-0" style="font-size:13px">
+        <tr>
+          <td class="text-muted" style="width:35%">Mã BN</td>
+          <td><code class="text-primary fw-semibold">{{ lich.MaBN }}</code></td>
+        </tr>
+        <tr>
+          <td class="text-muted">Ngày sinh</td>
+          <td>
+            {% if lich.NgaySinh %}
+              {{ lich.NgaySinh.strftime('%d/%m/%Y') if lich.NgaySinh.strftime is defined else lich.NgaySinh }}
+            {% else %}—{% endif %}
+          </td>
+        </tr>
+        <tr>
+          <td class="text-muted">Giới tính</td>
+          <td>{{ lich.GioiTinh or '—' }}</td>
+        </tr>
+        <tr>
+          <td class="text-muted">SĐT</td>
+          <td>{{ lich.SDT or '—' }}</td>
+        </tr>
+        <tr>
+          <td class="text-muted">Địa chỉ</td>
+          <td>{{ lich.DiaChi or '—' }}</td>
+        </tr>
+      </table>
+
+      {% if lich.TienSuBenh %}
+      <div class="mt-3">
+        <div class="form-label mb-1">
+          <i class="bi bi-exclamation-triangle-fill text-warning me-1"></i>Tiền sử bệnh
+        </div>
+        <div class="patient-history-box">{{ lich.TienSuBenh }}</div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- CỘT PHẢI: Appointment info + Form -->
+  <div class="col-lg-8">
+    <!-- Chi tiết lịch hẹn -->
+    <div class="card-hospital mb-4">
+      <div class="form-section-title">
+        <i class="bi bi-calendar-event me-2"></i>Chi Tiết Lịch Hẹn
+      </div>
+      <div class="row g-3">
+        <div class="col-sm-6">
+          <div class="p-3 rounded" style="background:var(--bg);border:1px solid var(--border)">
+            <div class="text-muted small mb-1">Bác sĩ phụ trách</div>
+            <div class="fw-semibold" style="color:var(--primary)">{{ lich.TenBS }}</div>
+            <span class="badge bg-light text-dark border" style="font-size:11px">
+              {{ lich.ChuyenKhoa or 'Đa khoa' }}
+            </span>
+          </div>
+        </div>
+        <div class="col-sm-6">
+          <div class="p-3 rounded" style="background:var(--bg);border:1px solid var(--border)">
+            <div class="text-muted small mb-1">Ngày giờ khám</div>
+            <div class="fw-semibold" style="color:var(--primary)">
+              {% if lich.NgayGio %}
+                {{ lich.NgayGio.strftime('%H:%M — %d/%m/%Y') if lich.NgayGio.strftime is defined else lich.NgayGio }}
+              {% else %}—{% endif %}
+            </div>
+          </div>
+        </div>
+        <div class="col-12">
+          <div class="p-3 rounded" style="background:var(--bg);border:1px solid var(--border)">
+            <div class="text-muted small mb-1">Lý do khám</div>
+            <div>{{ lich.LyDoKham or '—' }}</div>
+          </div>
+        </div>
+      </div>
+
+      {% if hsba %}
+      <div class="alert alert-info mt-3 mb-0">
+        <i class="bi bi-info-circle me-2"></i>
+        Đã có hồ sơ bệnh án <strong>{{ hsba.MaHoSo }}</strong> cho lần khám này.
+        <a href="{{ url_for('ke_don', ma_ho_so=hsba.MaHoSo) }}" class="btn btn-sm btn-primary ms-2">
+          <i class="bi bi-capsule me-1"></i>Đến Kê Đơn
+        </a>
+      </div>
+      {% endif %}
+    </div>
+
+    {% if not hsba %}
+    <!-- FORM TẠO HỒ SƠ BỆNH ÁN -->
+    <div class="card-hospital">
+      <div class="form-section-title">
+        <i class="bi bi-file-medical me-2"></i>Tạo Hồ Sơ Bệnh Án
+      </div>
+      <form method="POST">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label">Triệu Chứng <span class="text-danger">*</span></label>
+            <textarea name="trieu_chung" class="form-control" rows="5"
+                      placeholder="Mô tả triệu chứng bệnh nhân đang có..." required></textarea>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Chẩn Đoán <span class="text-danger">*</span></label>
+            <textarea name="chan_doan" class="form-control" rows="5"
+                      placeholder="Chẩn đoán của bác sĩ..." required></textarea>
+          </div>
+          <div class="col-12">
+            <label class="form-label">Ghi Chú Thêm</label>
+            <textarea name="ghi_chu" class="form-control" rows="3"
+                      placeholder="Chỉ định xét nghiệm, lưu ý điều trị..."></textarea>
+          </div>
+        </div>
+
+        <div class="d-flex gap-2 mt-4">
+          <button type="submit" class="btn btn-hospital btn-lg px-4">
+            <i class="bi bi-save me-2"></i>Lưu & Chuyển Kê Đơn
+          </button>
+          <a href="{{ url_for('lich_hen') }}" class="btn btn-outline-secondary btn-lg">Hủy</a>
+        </div>
+      </form>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

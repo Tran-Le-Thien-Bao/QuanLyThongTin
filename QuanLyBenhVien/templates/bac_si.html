@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% block title %}Danh Sách Bác Sĩ{% endblock %}
+{% block breadcrumb %}Danh Sách Bác Sĩ{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h5 class="page-title mb-0">
+    <i class="bi bi-person-badge me-2"></i>Danh Sách Bác Sĩ
+  </h5>
+  <span class="badge fs-6 px-3" style="background:var(--primary)">
+    {{ ds | length }} bác sĩ
+  </span>
+</div>
+
+<!-- TÌM KIẾM -->
+<div class="card-hospital mb-4">
+  <form method="GET" class="d-flex gap-2 align-items-end">
+    <div class="flex-grow-1">
+      <label class="form-label">Tìm kiếm bác sĩ</label>
+      <div class="input-group">
+        <span class="input-group-text"><i class="bi bi-search"></i></span>
+        <input type="text" name="q" class="form-control"
+               placeholder="Tên bác sĩ, chuyên khoa, mã BS..."
+               value="{{ search }}">
+      </div>
+    </div>
+    <button type="submit" class="btn btn-accent">
+      <i class="bi bi-search me-1"></i>Tìm
+    </button>
+    {% if search %}
+    <a href="{{ url_for('bac_si') }}" class="btn btn-outline-secondary">
+      <i class="bi bi-x me-1"></i>Xóa lọc
+    </a>
+    {% endif %}
+  </form>
+</div>
+
+<!-- DANH SÁCH -->
+<div class="card">
+  <div class="card-header bg-white">
+    <i class="bi bi-list-ul me-2" style="color:var(--accent)"></i>
+    {% if search %}
+      Kết quả tìm "<strong>{{ search }}</strong>"
+    {% else %}
+      <strong>Tất Cả Bác Sĩ</strong>
+    {% endif %}
+    <span class="badge ms-2" style="background:var(--primary)">{{ ds | length }}</span>
+  </div>
+  <div class="card-body p-0">
+    {% if ds %}
+    <div class="table-responsive">
+      <table class="table table-hover mb-0 align-middle">
+        <thead>
+          <tr>
+            <th>Mã BS</th>
+            <th>Họ Tên</th>
+            <th>Chuyên Khoa</th>
+            <th>Trình Độ</th>
+            <th>SĐT</th>
+            <th>Email</th>
+            <th class="text-center">Lượt Khám</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for b in ds %}
+          <tr>
+            <td><code style="color:var(--primary);font-size:12px">{{ b.MaBS }}</code></td>
+            <td>
+              <div class="d-flex align-items-center gap-2">
+                <div class="user-avatar sm" style="flex-shrink:0;font-size:11px">
+                  {{ b.HoTen[:1] if b.HoTen else '?' }}
+                </div>
+                <span class="fw-semibold">{{ b.HoTen }}</span>
+              </div>
+            </td>
+            <td>
+              <span class="badge bg-light text-dark border" style="font-size:11px">
+                {{ b.ChuyenKhoa or '—' }}
+              </span>
+            </td>
+            <td class="text-muted" style="font-size:12px">{{ b.TrinhDo or '—' }}</td>
+            <td class="text-muted" style="font-size:12px">{{ b.SDT or '—' }}</td>
+            <td class="text-muted" style="font-size:12px">{{ b.Email or '—' }}</td>
+            <td class="text-center">
+              <span class="badge {{ 'bg-primary' if b.SoLuotKham > 0 else 'bg-light text-muted border' }}">
+                {{ b.SoLuotKham }}
+              </span>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="text-center py-5 text-muted">
+      <i class="bi bi-person-x d-block mb-2" style="font-size:3rem;color:#dee2e6"></i>
+      Không tìm thấy bác sĩ nào{% if search %} với từ khóa "<strong>{{ search }}</strong>"{% endif %}
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- THỐNG KÊ CHUYÊN KHOA -->
+{% if ds and not search %}
+<div class="card mt-4">
+  <div class="card-header bg-white">
+    <i class="bi bi-pie-chart me-2" style="color:var(--accent)"></i>
+    <strong>Phân Bố Theo Chuyên Khoa</strong>
+  </div>
+  <div class="card-body">
+    {% set ck_dict = {} %}
+    {% for b in ds %}
+      {% set ck = b.ChuyenKhoa or 'Chưa rõ' %}
+      {%- if ck in ck_dict -%}
+        {%- set _ = ck_dict.update({ck: ck_dict[ck] + 1}) -%}
+      {%- else -%}
+        {%- set _ = ck_dict.update({ck: 1}) -%}
+      {%- endif -%}
+    {% endfor %}
+    <div class="row g-2">
+      {% for ck, count in ck_dict.items() %}
+      <div class="col-md-4 col-lg-3">
+        <div class="d-flex justify-content-between align-items-center p-2 rounded"
+             style="background:var(--bg);border:1px solid var(--border)">
+          <span class="small fw-semibold">{{ ck }}</span>
+          <span class="badge" style="background:var(--accent)">{{ count }}</span>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

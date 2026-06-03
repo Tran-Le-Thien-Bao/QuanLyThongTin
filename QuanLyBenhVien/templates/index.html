@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+{% block title %}Tổng quan — Quản Lý Bệnh Viện{% endblock %}
+{% block breadcrumb %}Tổng quan{% endblock %}
+
+{% block content %}
+<h5 class="page-title mb-4">
+  <i class="bi bi-house-fill me-2"></i>Tổng Quan Hệ Thống
+</h5>
+
+<!-- STAT CARDS -->
+<div class="row g-3 mb-4">
+  <div class="col-sm-6 col-xl-3">
+    <div class="stat-card">
+      <div class="stat-icon teal"><i class="bi bi-people-fill"></i></div>
+      <div>
+        <div class="stat-label">Tổng bệnh nhân</div>
+        <div class="stat-value">{{ so_benh_nhan }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-3">
+    <div class="stat-card">
+      <div class="stat-icon blue"><i class="bi bi-person-badge-fill"></i></div>
+      <div>
+        <div class="stat-label">Bác sĩ</div>
+        <div class="stat-value">{{ so_bac_si }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-3">
+    <div class="stat-card">
+      <div class="stat-icon orange"><i class="bi bi-calendar-check-fill"></i></div>
+      <div>
+        <div class="stat-label">Lịch hẹn hôm nay</div>
+        <div class="stat-value">{{ lich_hom_nay }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-3">
+    <div class="stat-card">
+      <div class="stat-icon red"><i class="bi bi-receipt-cutoff"></i></div>
+      <div>
+        <div class="stat-label">Hóa đơn chưa TT</div>
+        <div class="stat-value">{{ hoa_don_chua_tt }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CONTENT ROW -->
+<div class="row g-4">
+  <!-- Lịch hẹn hôm nay -->
+  <div class="col-lg-8">
+    <div class="card h-100">
+      <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <span>
+          <i class="bi bi-calendar-event me-2" style="color:var(--accent)"></i>
+          <strong>Lịch hẹn hôm nay</strong>
+          <span class="badge ms-2" style="background:var(--accent)">{{ lich_hom_nay }}</span>
+        </span>
+        <a href="{{ url_for('lich_hen') }}" class="btn btn-sm btn-outline-secondary">
+          Xem tất cả <i class="bi bi-arrow-right ms-1"></i>
+        </a>
+      </div>
+      <div class="card-body p-0">
+        {% if recent_lich %}
+        <div class="table-responsive">
+          <table class="table table-hover mb-0 align-middle">
+            <thead>
+              <tr>
+                <th style="width:70px">Giờ</th>
+                <th>Bệnh nhân</th>
+                <th>Bác sĩ</th>
+                <th>Trạng thái</th>
+                <th class="text-center" style="width:90px">Hành động</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for lh in recent_lich %}
+              <tr>
+                <td class="fw-semibold" style="color:var(--primary)">
+                  {% if lh.NgayGio %}
+                    {{ lh.NgayGio.strftime('%H:%M') if lh.NgayGio.strftime is defined else lh.NgayGio }}
+                  {% else %}—{% endif %}
+                </td>
+                <td>
+                  <div class="fw-semibold">{{ lh.TenBN }}</div>
+                  <small class="text-muted">{{ lh.LyDoKham or '—' }}</small>
+                </td>
+                <td class="text-muted" style="font-size:13px">{{ lh.TenBS }}</td>
+                <td>
+                  {% set tt = lh.TrangThai %}
+                  {% if tt == 'Chờ khám' %}
+                    <span class="status-pill badge-cho-kham">{{ tt }}</span>
+                  {% elif tt == 'Đang khám' %}
+                    <span class="status-pill badge-dang-kham">{{ tt }}</span>
+                  {% elif tt == 'Hoàn thành' %}
+                    <span class="status-pill badge-hoan-thanh">{{ tt }}</span>
+                  {% else %}
+                    <span class="status-pill badge-da-huy">{{ tt }}</span>
+                  {% endif %}
+                </td>
+                <td class="text-center">
+                  {% if tt == 'Chờ khám' %}
+                  <a href="{{ url_for('kham_benh', ma_lich=lh.MaLich) }}"
+                     class="btn btn-sm btn-primary">Khám</a>
+                  {% elif tt == 'Đang khám' and lh.MaHoSo %}
+                  <a href="{{ url_for('ke_don', ma_ho_so=lh.MaHoSo) }}"
+                     class="btn btn-sm btn-accent">Kê đơn</a>
+                  {% else %}
+                  <span class="text-muted">—</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5 text-muted">
+          <i class="bi bi-calendar-x fs-1 d-block mb-2" style="color:#dee2e6"></i>
+          Chưa có lịch hẹn nào hôm nay
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Sidebar widgets -->
+  <div class="col-lg-4">
+    <!-- Quick actions -->
+    <div class="card-hospital mb-3">
+      <div class="form-section-title">
+        <i class="bi bi-lightning-charge me-2" style="color:var(--accent)"></i>Thao Tác Nhanh
+      </div>
+      <div class="d-grid gap-2">
+        <a href="{{ url_for('tiep_nhan') }}" class="btn btn-hospital">
+          <i class="bi bi-person-plus me-2"></i>Tiếp Nhận Bệnh Nhân
+        </a>
+        <a href="{{ url_for('lich_hen') }}" class="btn btn-outline-secondary">
+          <i class="bi bi-calendar3 me-2"></i>Xem Lịch Hẹn
+        </a>
+        <a href="{{ url_for('bao_cao') }}" class="btn btn-outline-secondary">
+          <i class="bi bi-bar-chart-line me-2"></i>Xem Báo Cáo
+        </a>
+      </div>
+    </div>
+
+    <!-- Unpaid invoices widget -->
+    <div class="card-hospital text-center">
+      <i class="bi bi-receipt-cutoff d-block mb-2" style="font-size:2.2rem;color:var(--warning)"></i>
+      <div class="stat-value mb-1" style="color:{% if hoa_don_chua_tt > 0 %}var(--warning){% else %}var(--success){% endif %}">
+        {{ hoa_don_chua_tt }}
+      </div>
+      <div class="text-muted mb-3" style="font-size:13px">hóa đơn chưa thanh toán</div>
+      <a href="{{ url_for('lich_hen') }}" class="btn btn-sm"
+         style="background:var(--warning);color:#000;font-weight:600">
+        <i class="bi bi-arrow-right me-1"></i>Xử lý ngay
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

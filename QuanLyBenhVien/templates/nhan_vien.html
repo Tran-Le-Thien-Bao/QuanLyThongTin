@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}Danh Sách Nhân Viên{% endblock %}
+{% block breadcrumb %}Danh Sách Nhân Viên{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h5 class="page-title mb-0">
+    <i class="bi bi-people me-2"></i>Danh Sách Nhân Viên
+  </h5>
+  <span class="badge fs-6 px-3" style="background:var(--primary)">
+    {{ ds | length }} nhân viên
+  </span>
+</div>
+
+<!-- THỐNG KÊ THEO VAI TRÒ -->
+{% set roles = {'Admin': ('blue','bi-shield-lock'), 'Bác sĩ': ('green','bi-heart-pulse'),
+                'Y tá': ('teal','bi-activity'), 'Kế toán': ('orange','bi-calculator')} %}
+<div class="row g-3 mb-4">
+  {% for vt, (color, icon) in roles.items() %}
+  {% set cnt = ds | selectattr('VaiTro', 'equalto', vt) | list | length %}
+  <div class="col-sm-6 col-xl-3">
+    <div class="stat-card">
+      <div class="stat-icon {{ color }}"><i class="bi {{ icon }}"></i></div>
+      <div>
+        <div class="stat-label">{{ vt }}</div>
+        <div class="stat-value">{{ cnt }}</div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- BẢNG NHÂN VIÊN -->
+<div class="card">
+  <div class="card-header bg-white">
+    <i class="bi bi-list-ul me-2" style="color:var(--accent)"></i>
+    <strong>Danh Sách Nhân Viên Hệ Thống</strong>
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0 align-middle">
+        <thead>
+          <tr>
+            <th>Mã NV</th>
+            <th>Họ Tên</th>
+            <th>Vai Trò</th>
+            <th>Tài Khoản</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for nv in ds %}
+          <tr>
+            <td><code style="color:var(--primary);font-size:12px">{{ nv.MaNV }}</code></td>
+            <td>
+              <div class="d-flex align-items-center gap-2">
+                <div class="user-avatar sm" style="flex-shrink:0;font-size:11px">
+                  {{ nv.HoTen[:1] if nv.HoTen else '?' }}
+                </div>
+                <span class="fw-semibold">{{ nv.HoTen }}</span>
+              </div>
+            </td>
+            <td>
+              {% if nv.VaiTro == 'Admin' %}
+                <span class="status-pill" style="background:#EBF0F7;color:var(--primary);border:1px solid var(--primary)">
+                  <i class="bi bi-shield-lock me-1"></i>{{ nv.VaiTro }}
+                </span>
+              {% elif nv.VaiTro == 'Bác sĩ' %}
+                <span class="status-pill badge-hoan-thanh">
+                  <i class="bi bi-heart-pulse me-1"></i>{{ nv.VaiTro }}
+                </span>
+              {% elif nv.VaiTro == 'Y tá' %}
+                <span class="status-pill badge-dang-kham">
+                  <i class="bi bi-activity me-1"></i>{{ nv.VaiTro }}
+                </span>
+              {% else %}
+                <span class="status-pill badge-cho-kham">
+                  <i class="bi bi-calculator me-1"></i>{{ nv.VaiTro }}
+                </span>
+              {% endif %}
+            </td>
+            <td><code style="font-size:12px">{{ nv.TaiKhoan }}</code></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

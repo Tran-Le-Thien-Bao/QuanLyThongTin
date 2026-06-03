@@ -1,0 +1,246 @@
+{% extends "base.html" %}
+{% block title %}Tiếp Nhận Bệnh Nhân{% endblock %}
+{% block breadcrumb %}Tiếp Nhận Bệnh Nhân{% endblock %}
+
+{% block content %}
+<h5 class="page-title mb-3">
+  <i class="bi bi-person-plus-fill me-2"></i>Tiếp Nhận Bệnh Nhân
+</h5>
+
+<!-- STEP INDICATOR -->
+<div class="step-indicator mb-4">
+  <div class="step-item active" id="step1-item">
+    <span class="step-dot">1</span>Kiểm tra bệnh nhân
+  </div>
+  <div class="step-line"></div>
+  <div class="step-item" id="step2-item">
+    <span class="step-dot">2</span>Đặt lịch hẹn
+  </div>
+</div>
+
+<!-- LOOKUP CCCD -->
+<div class="card-hospital mb-4">
+  <div class="form-section-title">
+    <i class="bi bi-search me-2"></i>Tra Cứu CCCD / CMND
+  </div>
+  <div class="row g-2 align-items-end">
+    <div class="col-md-7 col-lg-5">
+      <label class="form-label">Số CCCD / CMND</label>
+      <input type="text" id="cccd-input" class="form-control form-control-lg"
+             placeholder="Nhập số CCCD để tra cứu bệnh nhân cũ..."
+             value="{{ cccd_lookup }}" maxlength="20">
+    </div>
+    <div class="col-md-3 col-lg-2">
+      <button type="button" class="btn btn-accent btn-lg w-100" onclick="traCuuCCCD()">
+        <i class="bi bi-search me-2"></i>Tra Cứu
+      </button>
+    </div>
+  </div>
+  <div id="bn-cu-info" class="mt-3" style="display:none"></div>
+</div>
+
+<!-- MAIN FORM -->
+<form method="POST" id="tiep-nhan-form">
+  <input type="hidden" id="form-cccd" name="cccd" value="{{ cccd_lookup }}">
+
+  <div class="row g-4">
+    <!-- Cột trái: Thông tin bệnh nhân -->
+    <div class="col-lg-7">
+      <div class="card-hospital">
+        <div class="form-section-title">
+          <i class="bi bi-person me-2"></i>Thông Tin Bệnh Nhân
+        </div>
+        <div id="patient-fields">
+          <div class="row g-3">
+            <div class="col-12">
+              <label class="form-label">Họ và Tên <span class="text-danger">*</span></label>
+              <input type="text" name="ho_ten" id="ho_ten" class="form-control"
+                     placeholder="Nguyễn Văn A">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Ngày Sinh <span class="text-danger">*</span></label>
+              <input type="date" name="ngay_sinh" id="ngay_sinh" class="form-control"
+                     max="{{ today }}">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Giới Tính</label>
+              <select name="gioi_tinh" id="gioi_tinh" class="form-select">
+                <option value="">-- Chọn --</option>
+                <option value="Nam">Nam</option>
+                <option value="Nữ">Nữ</option>
+                <option value="Khác">Khác</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Số Điện Thoại</label>
+              <input type="tel" name="sdt" id="sdt" class="form-control"
+                     placeholder="0901234567">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Nhóm Máu</label>
+              <select name="nhom_mau" id="nhom_mau" class="form-select">
+                <option value="">-- Không rõ --</option>
+                {% for nm in ['A+','A-','B+','B-','AB+','AB-','O+','O-'] %}
+                <option value="{{ nm }}">{{ nm }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Địa Chỉ</label>
+              <input type="text" name="dia_chi" id="dia_chi" class="form-control"
+                     placeholder="Số nhà, đường, quận/huyện, tỉnh/thành phố">
+            </div>
+            <div class="col-12">
+              <label class="form-label">Tiền Sử Bệnh</label>
+              <textarea name="tien_su_benh" id="tien_su_benh" class="form-control" rows="3"
+                        placeholder="Ghi các bệnh mãn tính, dị ứng, phẫu thuật trước đây..."></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cột phải: Thông tin lịch hẹn -->
+    <div class="col-lg-5">
+      <div class="card-hospital mb-3">
+        <div class="form-section-title">
+          <i class="bi bi-calendar-plus me-2"></i>Thông Tin Lịch Hẹn
+        </div>
+        <div class="row g-3">
+          <div class="col-12">
+            <label class="form-label">Bác Sĩ Phụ Trách <span class="text-danger">*</span></label>
+            <select name="ma_bs" class="form-select" required>
+              <option value="">-- Chọn bác sĩ --</option>
+              {% for bs in bac_si_list %}
+              <option value="{{ bs.MaBS }}">
+                {{ bs.HoTen }} — {{ bs.ChuyenKhoa or 'Đa khoa' }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-12">
+            <label class="form-label">Ngày Giờ Khám <span class="text-danger">*</span></label>
+            <input type="datetime-local" name="ngay_gio" class="form-control" required
+                   min="{{ today }}T07:00">
+          </div>
+          <div class="col-12">
+            <label class="form-label">Lý Do Khám</label>
+            <textarea name="ly_do_kham" class="form-control" rows="4"
+                      placeholder="Mô tả triệu chứng, lý do đến khám..."></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="d-grid gap-2">
+        <button type="submit" class="btn btn-hospital btn-lg">
+          <i class="bi bi-check-circle me-2"></i>Tạo Lịch Hẹn
+        </button>
+        <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">Hủy</a>
+      </div>
+    </div>
+  </div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const today = "{{ today }}";
+
+async function traCuuCCCD() {
+  const cccd = document.getElementById('cccd-input').value.trim();
+  if (!cccd) { alert('Vui lòng nhập số CCCD'); return; }
+
+  document.getElementById('form-cccd').value = cccd;
+
+  try {
+    const resp = await fetch(`/api/tra-cuu-cccd?cccd=${encodeURIComponent(cccd)}`);
+    const data = await resp.json();
+    const infoDiv = document.getElementById('bn-cu-info');
+
+    if (data.found) {
+      const bn = data.data;
+      infoDiv.innerHTML = `
+        <div class="alert alert-success">
+          <i class="bi bi-person-check-fill me-2"></i>
+          <strong>Bệnh nhân đã có trong hệ thống</strong><br>
+          <span class="fw-semibold">${bn.HoTen}</span>
+          &nbsp;|&nbsp; Sinh: ${bn.NgaySinh}
+          &nbsp;|&nbsp; SĐT: ${bn.SDT || '—'}
+          &nbsp;|&nbsp; Nhóm máu: <span class="badge bg-danger">${bn.NhomMau || '—'}</span>
+        </div>`;
+      infoDiv.style.display = 'block';
+
+      setField('ho_ten', bn.HoTen, true);
+      setField('ngay_sinh', bn.NgaySinh, true);
+      setField('gioi_tinh', bn.GioiTinh, true);
+      setField('sdt', bn.SDT || '', true);
+      setField('nhom_mau', bn.NhomMau || '', true);
+      setField('dia_chi', bn.DiaChi || '', true);
+      setField('tien_su_benh', bn.TienSuBenh || '', true);
+
+      activateStep2();
+    } else {
+      infoDiv.innerHTML = `
+        <div class="alert alert-warning">
+          <i class="bi bi-person-x-fill me-2"></i>
+          Chưa có trong hệ thống — vui lòng điền thông tin bệnh nhân mới bên dưới.
+        </div>`;
+      infoDiv.style.display = 'block';
+      enableAllFields();
+      activateStep2();
+    }
+  } catch(e) {
+    alert('Lỗi kết nối: ' + e.message);
+  }
+}
+
+function activateStep2() {
+  const s1 = document.getElementById('step1-item');
+  const s2 = document.getElementById('step2-item');
+  if (s1) { s1.classList.remove('active'); s1.classList.add('done'); s1.querySelector('.step-dot').textContent = '✓'; }
+  if (s2) { s2.classList.add('active'); }
+}
+
+function setField(id, val, disabled) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.value = val || '';
+  el.disabled = disabled;
+}
+
+function enableAllFields() {
+  ['ho_ten','ngay_sinh','gioi_tinh','sdt','nhom_mau','dia_chi','tien_su_benh'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.disabled = false; el.value = ''; }
+  });
+}
+
+// Nếu có CCCD từ server, tự động điền
+{% if cccd_lookup %}
+window.onload = function() {
+  {% if bn_cu %}
+  const bn = {{ bn_cu | tojson }};
+  const infoDiv = document.getElementById('bn-cu-info');
+  infoDiv.innerHTML = `
+    <div class="alert alert-success">
+      <i class="bi bi-person-check-fill me-2"></i>
+      <strong>Bệnh nhân đã có trong hệ thống</strong><br>
+      <span class="fw-semibold">${bn.HoTen}</span>
+      &nbsp;|&nbsp; Sinh: ${bn.NgaySinh}
+      &nbsp;|&nbsp; SĐT: ${bn.SDT || '—'}
+      &nbsp;|&nbsp; Nhóm máu: <span class="badge bg-danger">${bn.NhomMau || '—'}</span>
+    </div>`;
+  infoDiv.style.display = 'block';
+  setField('ho_ten', bn.HoTen, true);
+  setField('ngay_sinh', bn.NgaySinh, true);
+  setField('gioi_tinh', bn.GioiTinh, true);
+  setField('sdt', bn.SDT || '', true);
+  setField('nhom_mau', bn.NhomMau || '', true);
+  setField('dia_chi', bn.DiaChi || '', true);
+  setField('tien_su_benh', bn.TienSuBenh || '', true);
+  activateStep2();
+  {% endif %}
+};
+{% endif %}
+</script>
+{% endblock %}
