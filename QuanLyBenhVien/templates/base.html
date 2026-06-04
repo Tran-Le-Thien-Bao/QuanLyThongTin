@@ -77,13 +77,7 @@
           <span class="nav-text">Lịch hẹn hôm nay</span>
         </a>
       </li>
-      <li class="nav-item">
-        <a class="nav-link {% if request.endpoint in ('kham_benh', 'ke_don', 'hoa_don') %}active{% endif %}"
-           href="{{ url_for('lich_hen') }}">
-          <i class="bi bi-folder2-open me-2"></i>
-          <span class="nav-text">Hồ sơ bệnh án</span>
-        </a>
-      </li>
+
       <li class="nav-item">
         <a class="nav-link {% if request.endpoint == 'bao_cao' %}active{% endif %}"
            href="{{ url_for('bao_cao') }}">
