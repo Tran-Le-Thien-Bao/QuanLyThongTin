@@ -28,6 +28,22 @@ def login_required(f):
     return decorated
 
 
+def role_required(roles):
+    """Decorator kiểm tra vai trò. Đặt bên dưới @login_required.
+    roles: list các VaiTro được phép, ví dụ ["Bác sĩ"] hoặc ["Kế toán", "Admin"].
+    """
+    def decorator(f):
+        @wraps(f)
+        def decorated(*args, **kwargs):
+            vai_tro = session.get("user", {}).get("VaiTro", "")
+            if vai_tro not in roles:
+                flash(f"Chức năng này chỉ dành cho: {', '.join(roles)}.", "danger")
+                return redirect(url_for("index"))
+            return f(*args, **kwargs)
+        return decorated
+    return decorator
+
+
 # ─────────────────────────────────────────────────────────────
 # ĐĂNG NHẬP / ĐĂNG XUẤT
 # ─────────────────────────────────────────────────────────────
@@ -285,10 +301,8 @@ def kham_benh(ma_lich):
 # ─────────────────────────────────────────────────────────────
 @app.route("/ke-don/<ma_ho_so>", methods=["GET", "POST"])
 @login_required
+@role_required(["Bác sĩ"])
 def ke_don(ma_ho_so):
-    if session["user"]["VaiTro"] != "Bác sĩ":
-        flash("Chỉ Bác sĩ mới được kê đơn thuốc.", "danger")
-        return redirect(url_for("index"))
 
     hsba = query_one(
         """
@@ -386,6 +400,7 @@ def ke_don(ma_ho_so):
 # ─────────────────────────────────────────────────────────────
 @app.route("/hoa-don/<ma_ho_so>", methods=["GET", "POST"])
 @login_required
+@role_required(["Bác sĩ", "Kế toán", "Admin"])
 def hoa_don(ma_ho_so):
     hsba = query_one(
         """
