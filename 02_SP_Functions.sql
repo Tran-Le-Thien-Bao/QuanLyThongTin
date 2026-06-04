@@ -463,3 +463,39 @@ GO
 --     @MaHD_Out     = @OutHD   OUTPUT,
 --     @TongTien_Out = @OutTien OUTPUT;
 -- SELECT @OutHD AS MaHoaDon, FORMAT(@OutTien, 'N0') + N' VNĐ' AS TongTien;
+
+
+-- ============================================================
+-- PHẦN 4: PHÂN QUYỀN (LOGIN / USER / ROLE / GRANT / DENY)
+-- Thực hiện: Tô Ngọc Huy
+-- ============================================================
+
+-- Tạo Login và User cho 4 vai trò
+CREATE LOGIN Login_BacSi  WITH PASSWORD = 'BacSi@2026';
+CREATE LOGIN Login_KeToan WITH PASSWORD = 'KeToan@2026';
+CREATE LOGIN Login_Admin  WITH PASSWORD = 'Admin@2026';
+CREATE LOGIN Login_YTa    WITH PASSWORD = 'YTa@2026';
+CREATE USER  User_BacSi   FOR LOGIN Login_BacSi;
+CREATE USER  User_KeToan  FOR LOGIN Login_KeToan;
+GO
+
+-- Tạo Role và gán User
+CREATE ROLE Role_BacSi;  CREATE ROLE Role_KeToan;
+ALTER ROLE Role_BacSi  ADD MEMBER User_BacSi;
+ALTER ROLE Role_KeToan ADD MEMBER User_KeToan;
+GO
+
+-- Phân quyền cho Role_BacSi
+GRANT SELECT, INSERT, UPDATE ON HoSoBenhAn  TO Role_BacSi;
+GRANT SELECT, INSERT, UPDATE ON DonThuoc    TO Role_BacSi;
+GRANT SELECT                 ON BenhNhan    TO Role_BacSi;
+DENY  INSERT, UPDATE, DELETE ON HoaDon      TO Role_BacSi;
+DENY  SELECT, INSERT, UPDATE ON NhanVien    TO Role_BacSi;
+GO
+
+-- Phân quyền cho Role_KeToan
+GRANT SELECT, INSERT, UPDATE ON HoaDon      TO Role_KeToan;
+GRANT SELECT                 ON HoSoBenhAn  TO Role_KeToan;
+DENY  INSERT, UPDATE, DELETE ON HoSoBenhAn  TO Role_KeToan;
+DENY  SELECT, INSERT, UPDATE ON NhanVien    TO Role_KeToan;
+GO
