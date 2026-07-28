@@ -19,7 +19,7 @@
 
 ## 📋 Giới Thiệu
 
-Hệ thống quản lý bệnh viện được xây dựng trên **SQL Server** và **Flask (Python)**, hỗ trợ toàn bộ quy trình từ tiếp nhận bệnh nhân đến xuất hóa đơn thanh toán.
+Hệ thống quản lý bệnh viện xây dựng trên **SQL Server** và **Flask (Python)**, hỗ trợ toàn bộ quy trình từ tiếp nhận bệnh nhân đến xuất hóa đơn thanh toán.
 
 ### Cơ sở dữ liệu (SQL Server)
 
